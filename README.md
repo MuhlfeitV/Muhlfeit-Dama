@@ -1,0 +1,1 @@
+Checkers code/Kód dámy
