@@ -16,6 +16,7 @@ postforceplay = False
 force = False
 moves = 0
 debugrender = False
+winner = None
 
 # Usable squares
 
@@ -24,7 +25,7 @@ class Square:
     def __init__(self, xcoordinate, ycoordinate, piececolor, type, available, link, jump):
         self.xcoordinate = xcoordinate
         self.ycoordinate = ycoordinate
-        self.piececolor = piececolor
+        self.piececolor = piececolor # 1 = black, 2 = white
         self.type = type
         self.available = available
         self.link = link # In case of forced move, the square which the selected piece jumps to
@@ -312,7 +313,28 @@ def keycheck(event):
             return "Debug"
     else: 
         return False
-        
+    
+
+
+def wincheck():
+    blackpieces = 0
+    whitepieces = 0
+    for x in range(len(squarelist)):
+        if squarelist[x].piececolor == 0:
+            continue
+        if squarelist[x].piececolor == 1:
+            blackpieces += 1
+        elif squarelist[x].piececolor == 2:
+            whitepieces += 1
+        if blackpieces > 0 and whitepieces > 0:
+            break
+    if blackpieces == 0:
+        return 2
+    elif blackpieces == 0:
+        return 1
+    else:
+        return None
+
 
 
 def debuglog(oldss):
@@ -336,11 +358,18 @@ def debuglog(oldss):
 
 def render():
     screen.fill("black")
-    pygame.draw.rect(screen, colors.LSPACE, (0, 0, 800, 800))
-    for row in range(0,8):
-        for column in range(0,8):
-            if (row + column) % 2 != 0:
-                pygame.draw.rect(screen, colors.DSPACE, (row*100, column*100, 100, 100))
+    if winner != None:
+        pygame.draw.rect(screen, colors.LSPACEWIN, (0, 0, 800, 800))
+        for row in range(0,8):
+            for column in range(0,8):
+                if (row + column) % 2 != 0:
+                    pygame.draw.rect(screen, colors.DSPACEWIN, (row*100, column*100, 100, 100))    
+    else:
+        pygame.draw.rect(screen, colors.LSPACE, (0, 0, 800, 800))
+        for row in range(0,8):
+            for column in range(0,8):
+                if (row + column) % 2 != 0:
+                    pygame.draw.rect(screen, colors.DSPACE, (row*100, column*100, 100, 100))
     if penis == False:
         if debugrender:
             for a in range(len(squarelist)):
@@ -388,6 +417,10 @@ def render():
         pygame.draw.circle(screen, colors.BPIECE, (500, 600), 100)
     if penis:
         text = font.render("Penis", True, colors.WPIECE)
+    elif winner == 1:
+        text = font.render("Black wins!", True, colors.WPIECE)
+    elif winner == 2:
+        text = font.render("White wins!", True, colors.WPIECE)
     elif blackturn == True:
         text = font.render("Black's turn!", True, colors.WPIECE)
     else:
@@ -409,14 +442,16 @@ while running:
         elif keycheck(event) == "Debug":
             debugrender = not debugrender
         if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
-            selsquare,is_selected,blackturn,moves,postforceplay,lastmove = click(selsquare,is_selected,blackturn,moves,postforceplay,lastmove)
-            if force == False:
-                availabilitycheck(selsquare, is_selected, blackturn)
+            if winner == None:
+                selsquare,is_selected,blackturn,moves,postforceplay,lastmove = click(selsquare,is_selected,blackturn,moves,postforceplay,lastmove)
+                if force == False:
+                    availabilitycheck(selsquare, is_selected, blackturn)
         oldss = debuglog(oldss)
     if postforceplay == False:
         force = forcecheck(blackturn)
     else:
         postforceplay = postforce(lastmove,blackturn)
+    winner = wincheck()
     render()
 
     pygame.display.flip()
