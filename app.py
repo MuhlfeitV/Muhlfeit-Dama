@@ -316,24 +316,53 @@ def keycheck(event):
     
 
 
-def wincheck():
-    blackpieces = 0
-    whitepieces = 0
-    for x in range(len(squarelist)):
-        if squarelist[x].piececolor == 0:
-            continue
-        if squarelist[x].piececolor == 1:
-            blackpieces += 1
-        elif squarelist[x].piececolor == 2:
-            whitepieces += 1
-        if blackpieces > 0 and whitepieces > 0:
-            break
-    if blackpieces == 0:
-        return 2
-    elif blackpieces == 0:
-        return 1
-    else:
+def wincheck(blackturn):
+    validmoves = 0
+    if force == True:
         return None
+    elif blackturn == True:
+        for a in range(len(squarelist)):
+            if squarelist[a].piececolor == 1:
+                for b in range(len(squarelist)):
+                    if squarelist[b].type == 0:
+                        if abs(squarelist[a].xcoordinate-squarelist[b].xcoordinate) == 1:
+                            if squarelist[a].type == 2:
+                                if abs(squarelist[a].ycoordinate-squarelist[b].ycoordinate) == 1:
+                                    validmoves += 1
+                                else: continue
+                            else:
+                                if squarelist[a].ycoordinate-squarelist[b].ycoordinate == 1:
+                                    validmoves +=1
+                                else: continue
+                        else: continue
+                    else: continue
+            else: continue
+        if validmoves == 0:
+            return 2
+        else:
+            return None
+    elif blackturn == False:
+        for a in range(len(squarelist)):
+            if squarelist[a].piececolor == 2:
+                for b in range(len(squarelist)):
+                    if squarelist[b].type == 0:
+                        if abs(squarelist[a].xcoordinate-squarelist[b].xcoordinate) == 1:
+                            if squarelist[a].type == 2:
+                                if abs(squarelist[a].ycoordinate-squarelist[b].ycoordinate) == 1:
+                                    validmoves += 1
+                                else: continue
+                            else:
+                                if squarelist[b].ycoordinate-squarelist[a].ycoordinate == 1:
+                                    validmoves += 1
+                                else: continue
+                        else: continue
+                    else: continue
+            else: continue
+        if validmoves == 0:
+            return 1
+        else:
+            return None
+
 
 
 
@@ -451,7 +480,7 @@ while running:
         force = forcecheck(blackturn)
     else:
         postforceplay = postforce(lastmove,blackturn)
-    winner = wincheck()
+    winner = wincheck(blackturn)
     render()
 
     pygame.display.flip()
