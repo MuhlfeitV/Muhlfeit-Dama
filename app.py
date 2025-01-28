@@ -10,13 +10,21 @@ logtext = open('log.txt', 'w')
 FPS = 60
 pygame.display.set_caption("Checkers")
 blackturn = True
-penis = False
 lastmove = None
 postforceplay = False
 force = False
 moves = 0
 debugrender = False
 winner = None
+
+# Game States
+
+gamestate = 0
+pendingstate = None # For the yes/no box
+
+# 0 Main Menu
+# 1 Game PVP
+# 2 Game PVCOM
 
 # Usable squares
 
@@ -303,12 +311,18 @@ def click(selsquare,is_selected,blackturn,m,postforceplay,lastmove):
                     
 
 
+def menuclick():
+    mousex, mousey = pygame.mouse.get_pos()
+    if mousex > 400 and mousex < 800 and mousey > 300 and mousey < 400:
+        return "SC_0"
+    elif mousex > 400 and mousex < 800 and mousey > 500 and mousey < 600:
+        return "QUIT"
+
+
 def keycheck(event):
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
             return "ESC"
-        elif event.key == pygame.K_p:
-            return "Penis"
         elif event.key == pygame.K_d:
             return "Debug"
     else: 
@@ -387,19 +401,31 @@ def debuglog(oldss):
 
 def render():
     screen.fill("black")
-    if winner != None:
-        pygame.draw.rect(screen, colors.LSPACEWIN, (0, 0, 800, 800))
-        for row in range(0,8):
-            for column in range(0,8):
-                if (row + column) % 2 != 0:
-                    pygame.draw.rect(screen, colors.DSPACEWIN, (row*100, column*100, 100, 100))    
-    else:
-        pygame.draw.rect(screen, colors.LSPACE, (0, 0, 800, 800))
-        for row in range(0,8):
-            for column in range(0,8):
-                if (row + column) % 2 != 0:
-                    pygame.draw.rect(screen, colors.DSPACE, (row*100, column*100, 100, 100))
-    if penis == False:
+    if gamestate == 0:
+        pygame.draw.rect(screen, colors.LSPACE, (400, 300, 400, 100))
+        pygame.draw.rect(screen, colors.LSPACE, (400, 500, 400, 100))
+        title = font.render("CHECKERS", True, colors.WPIECE)
+        title_rect = title.get_rect(center=(600,100))
+        option1 = font.render("PLAY", True, colors.BPIECE)
+        option1_rect = option1.get_rect(center=(600,350))
+        option2 = font.render("QUIT", True, colors.BPIECE)
+        option2_rect = option2.get_rect(center=(600,550))
+        screen.blit(title,title_rect)
+        screen.blit(option1,option1_rect)
+        screen.blit(option2,option2_rect)
+    elif gamestate == 1:
+        if winner != None:
+            pygame.draw.rect(screen, colors.LSPACEWIN, (0, 0, 800, 800))
+            for row in range(0,8):
+                for column in range(0,8):
+                    if (row + column) % 2 != 0:
+                        pygame.draw.rect(screen, colors.DSPACEWIN, (row*100, column*100, 100, 100))    
+        else:
+            pygame.draw.rect(screen, colors.LSPACE, (0, 0, 800, 800))
+            for row in range(0,8):
+                for column in range(0,8):
+                    if (row + column) % 2 != 0:
+                        pygame.draw.rect(screen, colors.DSPACE, (row*100, column*100, 100, 100))
         if debugrender:
             for a in range(len(squarelist)):
                 snum = font.render(str(a), True, colors.WPIECE)
@@ -439,48 +465,49 @@ def render():
                     pygame.draw.circle(screen, colors.WPIECE, (x.xcoordinate*100+50, x.ycoordinate*100+50), 40)
                 if x.type == 2:
                     pygame.draw.circle(screen, colors.KING, (x.xcoordinate*100+50, x.ycoordinate*100+50), 30)
-    else:
-        pygame.draw.rect(screen, colors.BPIECE, (300, 300, 200, 300))
-        pygame.draw.circle(screen, colors.BPIECE, (400, 300), 100)
-        pygame.draw.circle(screen, colors.BPIECE, (300, 600), 100)
-        pygame.draw.circle(screen, colors.BPIECE, (500, 600), 100)
-    if penis:
-        text = font.render("Penis", True, colors.WPIECE)
-    elif winner == 1:
-        text = font.render("Black wins!", True, colors.WPIECE)
-    elif winner == 2:
-        text = font.render("White wins!", True, colors.WPIECE)
-    elif blackturn == True:
-        text = font.render("Black's turn!", True, colors.WPIECE)
-    else:
-        text = font.render("White's turn!", True, colors.WPIECE)
-    text_rect = text.get_rect(center=(1000,50))
-    screen.blit(text, text_rect)
+        if winner == 1:
+            text = font.render("Black wins!", True, colors.WPIECE)
+        elif winner == 2:
+            text = font.render("White wins!", True, colors.WPIECE)
+        elif blackturn == True:
+            text = font.render("Black's turn!", True, colors.WPIECE)
+        else:
+            text = font.render("White's turn!", True, colors.WPIECE)
+        text_rect = text.get_rect(center=(1000,50))
+        screen.blit(text, text_rect)
 
 
 # Main
 openlog()
 while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif keycheck(event) == "ESC":
-            running = False
-        elif keycheck(event) == "Penis":
-            penis = not penis
-        elif keycheck(event) == "Debug":
-            debugrender = not debugrender
-        if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
-            if winner == None:
-                selsquare,is_selected,blackturn,moves,postforceplay,lastmove = click(selsquare,is_selected,blackturn,moves,postforceplay,lastmove)
-                if force == False:
-                    availabilitycheck(selsquare, is_selected, blackturn)
-        oldss = debuglog(oldss)
-    if postforceplay == False:
-        force = forcecheck(blackturn)
-    else:
-        postforceplay = postforce(lastmove,blackturn)
-    winner = wincheck(blackturn)
+    if gamestate == 1:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif keycheck(event) == "ESC":
+                running = False
+            elif keycheck(event) == "Debug":
+                debugrender = not debugrender
+            if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
+                if winner == None:
+                    selsquare,is_selected,blackturn,moves,postforceplay,lastmove = click(selsquare,is_selected,blackturn,moves,postforceplay,lastmove)
+                    if force == False:
+                        availabilitycheck(selsquare, is_selected, blackturn)
+            oldss = debuglog(oldss)
+        if postforceplay == False:
+            force = forcecheck(blackturn)
+        else:
+            postforceplay = postforce(lastmove,blackturn)
+        winner = wincheck(blackturn)
+    elif gamestate == 0:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
+                if menuclick() == "SC_0":
+                    gamestate = 1
+                elif menuclick() == "QUIT":
+                    running = False
     render()
 
     pygame.display.flip()
