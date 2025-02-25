@@ -1,5 +1,6 @@
 import pygame
 from math import floor
+import assets
 import colors
 import datetime
 
@@ -26,57 +27,85 @@ pendingstate = None # For the yes/no box
 # 1 Game PVP
 # 2 Game PVCOM
 
+# Buttons
+
+class Button:
+    
+    def __init__(self, asset, asset_h, x, y):
+        self.img = asset
+        self.img_h = asset_h
+        self.rect = self.img.get_rect()
+        self.rect_H = self.img_h.get_rect()
+        self.rect.topleft = (x, y)
+        self.rect_H.topleft = (x, y)
+        self.clicked = False
+
+    def draw(self):
+        pos = pygame.mouse.get_pos()
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] and not self.clicked:
+                self.clicked = True
+                return True
+            if not pygame.mouse.get_pressed()[0]:
+                self.clicked = False
+            screen.blit(self.img_h, (self.rect.x, self.rect.y))
+        else:
+            screen.blit(self.img, (self.rect.x, self.rect.y))
+
+MM_Play = Button(assets.Play, assets.Play_H, 500, 300)
+MM_Quit = Button(assets.Quit, assets.Quit_H, 500, 500)
+IG_Menu = Button(assets.Quit, assets.Quit_H, 900, 600)
+
 # Usable squares
 
 class Square:
 
-    def __init__(self, xcoordinate, ycoordinate, piececolor, type, available, link, jump):
+    def __init__(self, xcoordinate, ycoordinate, piececolor, type, available):
         self.xcoordinate = xcoordinate
         self.ycoordinate = ycoordinate
         self.piececolor = piececolor # 1 = black, 2 = white
         self.type = type
         self.available = available
-        self.link = link # In case of forced move, the square which the selected piece jumps to
-        self.jump = jump # In case of forced move, the square containing the piece which gets jumped over and removed by the selected piece
 
-a1 = Square(0,7,1,1,0,None,None)
-a3 = Square(2,7,1,1,0,None,None)
-a5 = Square(4,7,1,1,0,None,None)
-a7 = Square(6,7,1,1,0,None,None)
-b2 = Square(1,6,1,1,0,None,None)
-b4 = Square(3,6,1,1,0,None,None)
-b6 = Square(5,6,1,1,0,None,None)
-b8 = Square(7,6,1,1,0,None,None)
-c1 = Square(0,5,1,1,0,None,None)
-c3 = Square(2,5,1,1,0,None,None)
-c5 = Square(4,5,1,1,0,None,None)
-c7 = Square(6,5,1,1,0,None,None)
-d2 = Square(1,4,0,0,0,None,None)
-d4 = Square(3,4,0,0,0,None,None)
-d6 = Square(5,4,0,0,0,None,None)
-d8 = Square(7,4,0,0,0,None,None)
-e1 = Square(0,3,0,0,0,None,None)
-e3 = Square(2,3,0,0,0,None,None)
-e5 = Square(4,3,0,0,0,None,None)
-e7 = Square(6,3,0,0,0,None,None)
-f2 = Square(1,2,2,1,0,None,None)
-f4 = Square(3,2,2,1,0,None,None)
-f6 = Square(5,2,2,1,0,None,None)
-f8 = Square(7,2,2,1,0,None,None)
-g1 = Square(0,1,2,1,0,None,None)
-g3 = Square(2,1,2,1,0,None,None)
-g5 = Square(4,1,2,1,0,None,None)
-g7 = Square(6,1,2,1,0,None,None)
-h2 = Square(1,0,2,1,0,None,None)
-h4 = Square(3,0,2,1,0,None,None)
-h6 = Square(5,0,2,1,0,None,None)
-h8 = Square(7,0,2,1,0,None,None)
+a1 = Square(0,7,1,1,0)
+a3 = Square(2,7,1,1,0)
+a5 = Square(4,7,1,1,0)
+a7 = Square(6,7,1,1,0)
+b2 = Square(1,6,1,1,0)
+b4 = Square(3,6,1,1,0)
+b6 = Square(5,6,1,1,0)
+b8 = Square(7,6,1,1,0)
+c1 = Square(0,5,1,1,0)
+c3 = Square(2,5,1,1,0)
+c5 = Square(4,5,1,1,0)
+c7 = Square(6,5,1,1,0)
+d2 = Square(1,4,0,0,0)
+d4 = Square(3,4,0,0,0)
+d6 = Square(5,4,0,0,0)
+d8 = Square(7,4,0,0,0)
+e1 = Square(0,3,0,0,0)
+e3 = Square(2,3,0,0,0)
+e5 = Square(4,3,0,0,0)
+e7 = Square(6,3,0,0,0)
+f2 = Square(1,2,2,1,0)
+f4 = Square(3,2,2,1,0)
+f6 = Square(5,2,2,1,0)
+f8 = Square(7,2,2,1,0)
+g1 = Square(0,1,2,1,0)
+g3 = Square(2,1,2,1,0)
+g5 = Square(4,1,2,1,0)
+g7 = Square(6,1,2,1,0)
+h2 = Square(1,0,2,1,0)
+h4 = Square(3,0,2,1,0)
+h6 = Square(5,0,2,1,0)
+h8 = Square(7,0,2,1,0)
 
 squarelist = [a1,a3,a5,a7,b2,b4,b6,b8,c1,c3,c5,c7,d2,d4,d6,d8,e1,e3,e5,e7,f2,f4,f6,f8,g1,g3,g5,g7,h2,h4,h6,h8]
 
 selsquare = None
 is_selected = False
 oldss = None
+forcelist = []
 
 # pygame setup
 pygame.init()
@@ -101,6 +130,7 @@ def openlog():
 
 
 def forcecheck(blackturn):
+    forcelist.clear()
     x = 0
     if blackturn:
         clr = 1
@@ -121,9 +151,10 @@ def forcecheck(blackturn):
                                             (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
                                             squarelist[c].piececolor == 0
                                             ):
+                                            forcelist.append(a)
+                                            forcelist.append(b)
+                                            forcelist.append(c)
                                             squarelist[c].available = 2
-                                            squarelist[a].jump = b
-                                            squarelist[a].link = c
                                             x = 1
                             else:
                                 if blackturn:
@@ -136,9 +167,10 @@ def forcecheck(blackturn):
                                             (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
                                             squarelist[c].piececolor == 0
                                             ):
+                                                forcelist.append(a)
+                                                forcelist.append(b)
+                                                forcelist.append(c)
                                                 squarelist[c].available = 2
-                                                squarelist[a].jump = b
-                                                squarelist[a].link = c
                                                 x = 1
                                 else:
                                     if squarelist[a].ycoordinate-squarelist[b].ycoordinate == -1:
@@ -150,9 +182,10 @@ def forcecheck(blackturn):
                                             (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
                                             squarelist[c].piececolor == 0
                                             ):
+                                                forcelist.append(a)
+                                                forcelist.append(b)
+                                                forcelist.append(c)
                                                 squarelist[c].available = 2
-                                                squarelist[a].jump = b
-                                                squarelist[a].link = c
                                                 x = 1
     if x == 1:
         return True
@@ -162,6 +195,7 @@ def forcecheck(blackturn):
 
 
 def postforce(a,blackturn):
+    forcelist.clear()
     x = 0
     if blackturn:
         clr = 1
@@ -180,9 +214,10 @@ def postforce(a,blackturn):
                                 (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
                                 squarelist[c].piececolor == 0
                                 ):
+                                forcelist.append(a)
+                                forcelist.append(b)
+                                forcelist.append(c)
                                 squarelist[c].available = 2
-                                squarelist[a].jump = b
-                                squarelist[a].link = c
                                 x = 1
                 else:
                     if blackturn:
@@ -195,9 +230,10 @@ def postforce(a,blackturn):
                                 (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
                                 squarelist[c].piececolor == 0
                                 ):
+                                    forcelist.append(a)
+                                    forcelist.append(b)
+                                    forcelist.append(c)
                                     squarelist[c].available = 2
-                                    squarelist[a].jump = b
-                                    squarelist[a].link = c
                                     x = 1
                     else:
                         if squarelist[a].ycoordinate-squarelist[b].ycoordinate == -1:
@@ -209,9 +245,10 @@ def postforce(a,blackturn):
                                 (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
                                 squarelist[c].piececolor == 0
                                 ):
+                                    forcelist.append(a)
+                                    forcelist.append(b)
+                                    forcelist.append(c)
                                     squarelist[c].available = 2
-                                    squarelist[a].jump = b
-                                    squarelist[a].link = c
                                     x = 1
     if x == 1:
         return True
@@ -281,33 +318,38 @@ def click(selsquare,is_selected,blackturn,m,postforceplay,lastmove):
                 else:
                     return None,False,blackturn,m,postforceplay,lastmove
             elif is_selected == True:
-                if force:
-                  if squarelist[int(selsquare)].link == a:
-                    squarelist[a].piececolor,squarelist[a].type,squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type = squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type,squarelist[a].piececolor,squarelist[a].type
-                    squarelist[int(squarelist[int(selsquare)].jump)].type = 0
-                    squarelist[int(squarelist[int(selsquare)].jump)].piececolor = 0
-                    m += 1
-                    kingcheck()
-                    for x in range(len(squarelist)):
-                        squarelist[x].available = 0
-                    squarelist[int(selsquare)].link = None
-                    squarelist[int(selsquare)].jump = None
-                    if postforce(a,blackturn) == True:
-                        return None,False,blackturn,m,True,a
-                    else:
-                        return None,False,not blackturn,m,False,lastmove
-                  else:
+                if force or postforceplay:
+                    print(len(forcelist)/3)
+                    for f in range(int(len(forcelist)/3)):
+                        if forcelist[f*3] == selsquare and forcelist[f*3+2] == a:
+                            squarelist[a].piececolor,squarelist[a].type,squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type = squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type,squarelist[a].piececolor,squarelist[a].type
+                            squarelist[forcelist[f*3+1]].type,squarelist[forcelist[f*3+1]].piececolor = 0,0
+                            m += 1
+                            kingcheck()
+                            for x in range(len(squarelist)):
+                                squarelist[x].available = 0
+                            if postforce(a,blackturn) == True:
+                                return None,False,blackturn,m,True,a
+                            else:
+                                return None,False,not blackturn,m,False,lastmove
+                        else:
+                            continue
                     return None,False,blackturn,m,postforceplay,lastmove
                 elif squarelist[a].available == 1:
                     squarelist[a].piececolor,squarelist[a].type,squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type = squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type,squarelist[a].piececolor,squarelist[a].type
                     m += 1
                     kingcheck()
                     return None,False,not blackturn,m,postforceplay,lastmove
-                else: 
-                    return None,False,blackturn,m,postforceplay,lastmove
+                else:
+                    if squarelist[a].piececolor == clr:
+                        for f in range(len(squarelist)):
+                            squarelist[f].available = 0
+                        return a,True,blackturn,m,postforceplay,lastmove
+                    else:
+                        return None,False,blackturn,m,postforceplay,lastmove
             break
     if found == False:
-        return selsquare,is_selected,blackturn,m,postforceplay,lastmove
+        return None,False,blackturn,m,postforceplay,lastmove
                     
 
 
@@ -387,10 +429,7 @@ def debuglog(oldss):
         logtext.write(f"Moves completed: {moves}\n")
         squarenames = ["a1","a3","a5","a7","b2","b4","b6","b8","c1","c3","c5","c7","d2","d4","d6","d8","e1","e3","e5","e7","f2","f4","f6","f8","g1","g3","g5","g7","h2","h4","h6","h8"]
         for a in range(len(squarelist)):
-            if squarelist[a].link != None:
-                logtext.write(f"{squarenames[a]}: Piececolor {squarelist[a].piececolor} | Type {squarelist[a].type} | Available {squarelist[a].available} | Link {squarenames[squarelist[a].link]} | Jump {squarenames[squarelist[a].jump]}\n")
-            else:
-                logtext.write(f"{squarenames[a]}: Piececolor {squarelist[a].piececolor} | Type {squarelist[a].type} | Available {squarelist[a].available} | Link {squarelist[a].link} | Jump {squarelist[a].jump}\n")
+            logtext.write(f"{squarenames[a]}: Piececolor {squarelist[a].piececolor} | Type {squarelist[a].type} | Available {squarelist[a].available}\n")
         if is_selected:
             logtext.write(f"selsquare: {squarenames[selsquare]}\n")
         else:
@@ -402,17 +441,8 @@ def debuglog(oldss):
 def render():
     screen.fill("black")
     if gamestate == 0:
-        pygame.draw.rect(screen, colors.LSPACE, (400, 300, 400, 100))
-        pygame.draw.rect(screen, colors.LSPACE, (400, 500, 400, 100))
-        title = font.render("CHECKERS", True, colors.WPIECE)
-        title_rect = title.get_rect(center=(600,100))
-        option1 = font.render("PLAY", True, colors.BPIECE)
-        option1_rect = option1.get_rect(center=(600,350))
-        option2 = font.render("QUIT", True, colors.BPIECE)
-        option2_rect = option2.get_rect(center=(600,550))
-        screen.blit(title,title_rect)
-        screen.blit(option1,option1_rect)
-        screen.blit(option2,option2_rect)
+        screen.blit(assets.Menu_BG, (assets.Menu_BG.get_rect().x, assets.Menu_BG.get_rect().y))
+        screen.blit(assets.Title, (400,100))
     elif gamestate == 1:
         if winner != None:
             pygame.draw.rect(screen, colors.LSPACEWIN, (0, 0, 800, 800))
@@ -427,28 +457,25 @@ def render():
                     if (row + column) % 2 != 0:
                         pygame.draw.rect(screen, colors.DSPACE, (row*100, column*100, 100, 100))
         if debugrender:
+            propss = font.render(f"selsquare = {str(selsquare)}", True, colors.WPIECE)
+            propfl = font.render(f"forcelist = {str(forcelist)}", True, colors.WPIECE)
+            trss = propss.get_rect(center=(1000,200))
+            trfl = propss.get_rect(center=(1000,300))
+            screen.blit(propss,trss)
+            screen.blit(propfl,trfl)
             for a in range(len(squarelist)):
                 snum = font.render(str(a), True, colors.WPIECE)
                 prop0 = font.render(str(squarelist[a].piececolor), True, colors.DEBUG0)
                 prop1 = font.render(str(squarelist[a].type), True, colors.DEBUG1)
                 prop2 = font.render(str(squarelist[a].available), True, colors.DEBUG2)
-                prop3 = font.render(str(squarelist[a].link), True, colors.DEBUG3)
-                prop4 = font.render(str(squarelist[a].jump), True, colors.DEBUG4)
-                propss = font.render(f"selsquare = {str(selsquare)}", True, colors.WPIECE)
                 trn = snum.get_rect(topleft=(squarelist[a].xcoordinate*100,squarelist[a].ycoordinate*100),bottomright=(squarelist[a].xcoordinate*100+20,squarelist[a].ycoordinate*100+20))
                 tr0 = prop0.get_rect(topleft=(squarelist[a].xcoordinate*100+25,squarelist[a].ycoordinate*100),bottomright=(squarelist[a].xcoordinate*100+45,squarelist[a].ycoordinate*100+20))
                 tr1 = prop1.get_rect(topleft=(squarelist[a].xcoordinate*100+50,squarelist[a].ycoordinate*100),bottomright=(squarelist[a].xcoordinate*100+70,squarelist[a].ycoordinate*100+20))
                 tr2 = prop2.get_rect(topleft=(squarelist[a].xcoordinate*100,squarelist[a].ycoordinate*100+30),bottomright=(squarelist[a].xcoordinate*100+20,squarelist[a].ycoordinate*100+50))
-                tr3 = prop3.get_rect(topleft=(squarelist[a].xcoordinate*100,squarelist[a].ycoordinate*100+55),bottomright=(squarelist[a].xcoordinate*100+20,squarelist[a].ycoordinate*100+75))
-                tr4 = prop4.get_rect(topleft=(squarelist[a].xcoordinate*100,squarelist[a].ycoordinate*100+80),bottomright=(squarelist[a].xcoordinate*100+20,squarelist[a].ycoordinate*100+100))
-                trss = propss.get_rect(center=(1000,200))
                 screen.blit(snum,trn)
                 screen.blit(prop0,tr0)
                 screen.blit(prop1,tr1)
                 screen.blit(prop2,tr2)
-                screen.blit(prop3,tr3)
-                screen.blit(prop4,tr4)
-                screen.blit(propss,trss)
         else:
             for a in range(len(squarelist)):
                 x = squarelist[a]
@@ -499,16 +526,18 @@ while running:
         else:
             postforceplay = postforce(lastmove,blackturn)
         winner = wincheck(blackturn)
+        render()
+        if IG_Menu.draw() == True:
+            gamestate = 0
     elif gamestate == 0:
+        render()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
-                if menuclick() == "SC_0":
-                    gamestate = 1
-                elif menuclick() == "QUIT":
-                    running = False
-    render()
+        if MM_Play.draw() == True:
+            gamestate = 1
+        if MM_Quit.draw() == True:
+            running = False
 
     pygame.display.flip()
     
