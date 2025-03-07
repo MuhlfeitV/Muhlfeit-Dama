@@ -3,6 +3,9 @@ from math import floor
 import assets
 import colors
 import datetime
+from square import *
+from button import *
+from render import *
 
 logtext = open('log.txt', 'w')
 
@@ -29,43 +32,11 @@ pendingstate = None # For the yes/no box
 
 # Buttons
 
-class Button:
-    
-    def __init__(self, asset, asset_h, x, y):
-        self.img = asset
-        self.img_h = asset_h
-        self.rect = self.img.get_rect()
-        self.rect_H = self.img_h.get_rect()
-        self.rect.topleft = (x, y)
-        self.rect_H.topleft = (x, y)
-        self.clicked = False
-
-    def draw(self):
-        pos = pygame.mouse.get_pos()
-        if self.rect.collidepoint(pos):
-            if pygame.mouse.get_pressed()[0] and not self.clicked:
-                self.clicked = True
-                return True
-            if not pygame.mouse.get_pressed()[0]:
-                self.clicked = False
-            screen.blit(self.img_h, (self.rect.x, self.rect.y))
-        else:
-            screen.blit(self.img, (self.rect.x, self.rect.y))
-
 MM_Play = Button(assets.Play, assets.Play_H, 500, 300)
 MM_Quit = Button(assets.Quit, assets.Quit_H, 500, 500)
 IG_Menu = Button(assets.Quit, assets.Quit_H, 900, 600)
 
 # Usable squares
-
-class Square:
-
-    def __init__(self, xcoordinate, ycoordinate, piececolor, type, available):
-        self.xcoordinate = xcoordinate
-        self.ycoordinate = ycoordinate
-        self.piececolor = piececolor # 1 = black, 2 = white
-        self.type = type
-        self.available = available
 
 a1 = Square(0,7,1,1,0)
 a3 = Square(2,7,1,1,0)
@@ -100,6 +71,42 @@ h4 = Square(3,0,2,1,0)
 h6 = Square(5,0,2,1,0)
 h8 = Square(7,0,2,1,0)
 
+def setgame():
+    """Resets game to its move 0 state"""
+    squarelist[0] = Square(0,7,1,1,0)
+    squarelist[1] = Square(2,7,1,1,0)
+    squarelist[2] = Square(4,7,1,1,0)
+    squarelist[3] = Square(6,7,1,1,0)
+    squarelist[4] = Square(1,6,1,1,0)
+    squarelist[5] = Square(3,6,1,1,0)
+    squarelist[6] = Square(5,6,1,1,0)
+    squarelist[7] = Square(7,6,1,1,0)
+    squarelist[8] = Square(0,5,1,1,0)
+    squarelist[9] = Square(2,5,1,1,0)
+    squarelist[10] = Square(4,5,1,1,0)
+    squarelist[11] = Square(6,5,1,1,0)
+    squarelist[12] = Square(1,4,0,0,0)
+    squarelist[13] = Square(3,4,0,0,0)
+    squarelist[14] = Square(5,4,0,0,0)
+    squarelist[15] = Square(7,4,0,0,0)
+    squarelist[16] = Square(0,3,0,0,0)
+    squarelist[17] = Square(2,3,0,0,0)
+    squarelist[18] = Square(4,3,0,0,0)
+    squarelist[19] = Square(6,3,0,0,0)
+    squarelist[20] = Square(1,2,2,1,0)
+    squarelist[21] = Square(3,2,2,1,0)
+    squarelist[22] = Square(5,2,2,1,0)
+    squarelist[23] = Square(7,2,2,1,0)
+    squarelist[24] = Square(0,1,2,1,0)
+    squarelist[25] = Square(2,1,2,1,0)
+    squarelist[26] = Square(4,1,2,1,0)
+    squarelist[27] = Square(6,1,2,1,0)
+    squarelist[28] = Square(1,0,2,1,0)
+    squarelist[29] = Square(3,0,2,1,0)
+    squarelist[30] = Square(5,0,2,1,0)
+    squarelist[31] = Square(7,0,2,1,0)
+    return True, None, False, False, 0, False, None
+
 squarelist = [a1,a3,a5,a7,b2,b4,b6,b8,c1,c3,c5,c7,d2,d4,d6,d8,e1,e3,e5,e7,f2,f4,f6,f8,g1,g3,g5,g7,h2,h4,h6,h8]
 
 selsquare = None
@@ -117,6 +124,7 @@ running = True
 
 
 def openlog():
+    """Opens game log and writes current date and time"""
     e = datetime.datetime.now()
     L = [e.strftime("%Y-%m-%d %H:%M:%S"), 
          e.strftime("%d/%m/%Y"), 
@@ -129,135 +137,84 @@ def openlog():
 
 
 
-def forcecheck(blackturn):
+def forcecheck(blackturn: bool) -> bool:
+    """Check for any forced moves which the player whose turn it is must choose from. Searches for all squares (index a in squarelist) with pieces matching the colour of the current player. Once found, looks for squares with pieces of the opposite colour (index b in squarelist) using function "force_findb(blackturn, force_found, clr, a)."
+    """
     forcelist.clear()
-    x = 0
+    force_found = False
     if blackturn:
         clr = 1
     else:
         clr = 2
     for a in range(len(squarelist)):
         if squarelist[a].piececolor == clr:
-                for b in range(len(squarelist)):
-                    if squarelist[b].piececolor != 0 and squarelist[b].piececolor != clr:
-                        if abs(squarelist[a].xcoordinate-squarelist[b].xcoordinate) == 1:
-                            if squarelist[a].type == 2:
-                                if abs(squarelist[a].ycoordinate-squarelist[b].ycoordinate) == 1:
-                                    for c in range(len(squarelist)):
-                                        if (
-                                            (squarelist[a].xcoordinate-squarelist[b].xcoordinate)*2==squarelist[a].xcoordinate-squarelist[c].xcoordinate and
-                                            (squarelist[a].ycoordinate-squarelist[b].ycoordinate)*2==squarelist[a].ycoordinate-squarelist[c].ycoordinate and
-                                            (squarelist[a].xcoordinate-squarelist[c].xcoordinate)!=0 and
-                                            (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
-                                            squarelist[c].piececolor == 0
-                                            ):
-                                            forcelist.append(a)
-                                            forcelist.append(b)
-                                            forcelist.append(c)
-                                            squarelist[c].available = 2
-                                            x = 1
-                            else:
-                                if blackturn:
-                                    if squarelist[a].ycoordinate-squarelist[b].ycoordinate == 1:
-                                        for c in range(len(squarelist)):
-                                            if (
-                                            (squarelist[a].xcoordinate-squarelist[b].xcoordinate)*2==squarelist[a].xcoordinate-squarelist[c].xcoordinate and
-                                            (squarelist[a].ycoordinate-squarelist[b].ycoordinate)*2==squarelist[a].ycoordinate-squarelist[c].ycoordinate and
-                                            (squarelist[a].xcoordinate-squarelist[c].xcoordinate)!=0 and
-                                            (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
-                                            squarelist[c].piececolor == 0
-                                            ):
-                                                forcelist.append(a)
-                                                forcelist.append(b)
-                                                forcelist.append(c)
-                                                squarelist[c].available = 2
-                                                x = 1
-                                else:
-                                    if squarelist[a].ycoordinate-squarelist[b].ycoordinate == -1:
-                                        for c in range(len(squarelist)):
-                                            if (
-                                            (squarelist[a].xcoordinate-squarelist[b].xcoordinate)*2==squarelist[a].xcoordinate-squarelist[c].xcoordinate and
-                                            (squarelist[a].ycoordinate-squarelist[b].ycoordinate)*2==squarelist[a].ycoordinate-squarelist[c].ycoordinate and
-                                            (squarelist[a].xcoordinate-squarelist[c].xcoordinate)!=0 and
-                                            (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
-                                            squarelist[c].piececolor == 0
-                                            ):
-                                                forcelist.append(a)
-                                                forcelist.append(b)
-                                                forcelist.append(c)
-                                                squarelist[c].available = 2
-                                                x = 1
-    if x == 1:
+                force_found = force_findb(blackturn, force_found, clr, a)
+    if force_found == True:
         return True
     else:
         return False
 
-
-
-def postforce(a,blackturn):
-    forcelist.clear()
-    x = 0
-    if blackturn:
-        clr = 1
-    else:
-        clr = 2
+def force_findb(blackturn: bool, force_found: bool, clr: int, a: int) -> bool:
+    """Searches for all squares (index b in squarelist) with pieces of the opposite colour to square with index a in squarelist. Once found, compares coordinates of both squares to see if piece on square b is in position to potentially be jumped by piece on square A, then calls function "force_findc(a, b, force_found)."
+    """
     for b in range(len(squarelist)):
         if squarelist[b].piececolor != 0 and squarelist[b].piececolor != clr:
             if abs(squarelist[a].xcoordinate-squarelist[b].xcoordinate) == 1:
                 if squarelist[a].type == 2:
                     if abs(squarelist[a].ycoordinate-squarelist[b].ycoordinate) == 1:
-                        for c in range(len(squarelist)):
-                            if (
-                                (squarelist[a].xcoordinate-squarelist[b].xcoordinate)*2==squarelist[a].xcoordinate-squarelist[c].xcoordinate and
-                                (squarelist[a].ycoordinate-squarelist[b].ycoordinate)*2==squarelist[a].ycoordinate-squarelist[c].ycoordinate and
-                                (squarelist[a].xcoordinate-squarelist[c].xcoordinate)!=0 and
-                                (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
-                                squarelist[c].piececolor == 0
-                                ):
-                                forcelist.append(a)
-                                forcelist.append(b)
-                                forcelist.append(c)
-                                squarelist[c].available = 2
-                                x = 1
+                        force_found = force_findc(a, b, force_found)
                 else:
                     if blackturn:
                         if squarelist[a].ycoordinate-squarelist[b].ycoordinate == 1:
-                            for c in range(len(squarelist)):
-                                if (
-                                (squarelist[a].xcoordinate-squarelist[b].xcoordinate)*2==squarelist[a].xcoordinate-squarelist[c].xcoordinate and
-                                (squarelist[a].ycoordinate-squarelist[b].ycoordinate)*2==squarelist[a].ycoordinate-squarelist[c].ycoordinate and
-                                (squarelist[a].xcoordinate-squarelist[c].xcoordinate)!=0 and
-                                (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
-                                squarelist[c].piececolor == 0
-                                ):
-                                    forcelist.append(a)
-                                    forcelist.append(b)
-                                    forcelist.append(c)
-                                    squarelist[c].available = 2
-                                    x = 1
+                            force_found = force_findc(a, b, force_found)
                     else:
                         if squarelist[a].ycoordinate-squarelist[b].ycoordinate == -1:
-                            for c in range(len(squarelist)):
-                                if (
-                                (squarelist[a].xcoordinate-squarelist[b].xcoordinate)*2==squarelist[a].xcoordinate-squarelist[c].xcoordinate and
-                                (squarelist[a].ycoordinate-squarelist[b].ycoordinate)*2==squarelist[a].ycoordinate-squarelist[c].ycoordinate and
-                                (squarelist[a].xcoordinate-squarelist[c].xcoordinate)!=0 and
-                                (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
-                                squarelist[c].piececolor == 0
-                                ):
-                                    forcelist.append(a)
-                                    forcelist.append(b)
-                                    forcelist.append(c)
-                                    squarelist[c].available = 2
-                                    x = 1
-    if x == 1:
+                            force_found = force_findc(a, b, force_found)
+    return force_found
+
+def force_findc(a: int, b: int, force_found: bool) -> bool:
+    """Searches for square (index c in squarelist) which piece on square A will jump if it jumps over square B. If this square exists and is unoccupied, calls function "addforcedmove(a, b, c)."""
+    for c in range(len(squarelist)):
+        if (
+        (squarelist[a].xcoordinate-squarelist[b].xcoordinate)*2==squarelist[a].xcoordinate-squarelist[c].xcoordinate and
+        (squarelist[a].ycoordinate-squarelist[b].ycoordinate)*2==squarelist[a].ycoordinate-squarelist[c].ycoordinate and
+        (squarelist[a].xcoordinate-squarelist[c].xcoordinate)!=0 and
+        (squarelist[a].ycoordinate-squarelist[c].ycoordinate)!=0 and
+        squarelist[c].piececolor == 0
+        ):
+            force_found = addforcedmove(a, b, c)
+    return force_found
+            
+
+def addforcedmove(a: int, b: int, c: int) -> bool:
+    """
+    Adds valid forced move to the list of possible forced moves (by appending indexes of squares A, B, C to forcelist), visually marks square C and returns True so player can now only choose from forced moves (square with index a in squarelist)."""
+    forcelist.append(a)
+    forcelist.append(b)
+    forcelist.append(c)
+    squarelist[c].available = 2
+    return True
+
+
+
+def postforce(a: int, blackturn: bool) -> bool:
+    """Check for continuations of a chain of forced moves which the player whose turn it is must choose from. Only checks for piece which has just been moved by the player. Looks for squares with pieces of the opposite colour (index b in squarelist) using function "force_findb(blackturn, force_found, clr, a)."""
+    forcelist.clear()
+    force_found = 0
+    if blackturn:
+        clr = 1
+    else:
+        clr = 2
+    force_found = force_findb(blackturn, force_found, clr, a)
+    if force_found == True:
         return True
     else:
         return False
             
 
 
-def availabilitycheck(selsquare, is_selected, blackturn):
+def availabilitycheck(selsquare: int, is_selected: bool, blackturn: bool):
+    """Checks for possible moves of selected piece"""
     for a in range(len(squarelist)):
         if is_selected == False:
             squarelist[a].available = 0
@@ -288,6 +245,7 @@ def availabilitycheck(selsquare, is_selected, blackturn):
 
 
 def kingcheck():
+    """Checks for pieces which have reached the last row of the opposite side. If an uncrowned piece is found, it becomes a king."""
     for a in range(4):
         if squarelist[a].piececolor == 2:
             squarelist[a].type = 2
@@ -297,7 +255,8 @@ def kingcheck():
 
 
 
-def click(selsquare,is_selected,blackturn,m,postforceplay,lastmove):
+def click(selsquare: int, is_selected: bool, blackturn: bool, m: int, postforceplay: bool, lastmove: int):
+    """Detects which square the user clicks on."""
     print(f"blackturn = {blackturn}")
     if blackturn == True:
         clr = 1
@@ -438,70 +397,6 @@ def debuglog(oldss):
 
 # Render screen
 
-def render():
-    screen.fill("black")
-    if gamestate == 0:
-        screen.blit(assets.Menu_BG, (assets.Menu_BG.get_rect().x, assets.Menu_BG.get_rect().y))
-        screen.blit(assets.Title, (400,100))
-    elif gamestate == 1:
-        if winner != None:
-            pygame.draw.rect(screen, colors.LSPACEWIN, (0, 0, 800, 800))
-            for row in range(0,8):
-                for column in range(0,8):
-                    if (row + column) % 2 != 0:
-                        pygame.draw.rect(screen, colors.DSPACEWIN, (row*100, column*100, 100, 100))    
-        else:
-            pygame.draw.rect(screen, colors.LSPACE, (0, 0, 800, 800))
-            for row in range(0,8):
-                for column in range(0,8):
-                    if (row + column) % 2 != 0:
-                        pygame.draw.rect(screen, colors.DSPACE, (row*100, column*100, 100, 100))
-        if debugrender:
-            propss = font.render(f"selsquare = {str(selsquare)}", True, colors.WPIECE)
-            propfl = font.render(f"forcelist = {str(forcelist)}", True, colors.WPIECE)
-            trss = propss.get_rect(center=(1000,200))
-            trfl = propss.get_rect(center=(1000,300))
-            screen.blit(propss,trss)
-            screen.blit(propfl,trfl)
-            for a in range(len(squarelist)):
-                snum = font.render(str(a), True, colors.WPIECE)
-                prop0 = font.render(str(squarelist[a].piececolor), True, colors.DEBUG0)
-                prop1 = font.render(str(squarelist[a].type), True, colors.DEBUG1)
-                prop2 = font.render(str(squarelist[a].available), True, colors.DEBUG2)
-                trn = snum.get_rect(topleft=(squarelist[a].xcoordinate*100,squarelist[a].ycoordinate*100),bottomright=(squarelist[a].xcoordinate*100+20,squarelist[a].ycoordinate*100+20))
-                tr0 = prop0.get_rect(topleft=(squarelist[a].xcoordinate*100+25,squarelist[a].ycoordinate*100),bottomright=(squarelist[a].xcoordinate*100+45,squarelist[a].ycoordinate*100+20))
-                tr1 = prop1.get_rect(topleft=(squarelist[a].xcoordinate*100+50,squarelist[a].ycoordinate*100),bottomright=(squarelist[a].xcoordinate*100+70,squarelist[a].ycoordinate*100+20))
-                tr2 = prop2.get_rect(topleft=(squarelist[a].xcoordinate*100,squarelist[a].ycoordinate*100+30),bottomright=(squarelist[a].xcoordinate*100+20,squarelist[a].ycoordinate*100+50))
-                screen.blit(snum,trn)
-                screen.blit(prop0,tr0)
-                screen.blit(prop1,tr1)
-                screen.blit(prop2,tr2)
-        else:
-            for a in range(len(squarelist)):
-                x = squarelist[a]
-                if x.available == 2:
-                    pygame.draw.rect(screen, colors.FORCED, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
-                if selsquare != None:
-                    if x.available == 1:
-                        pygame.draw.rect(screen, colors.CANSEL, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
-                    if x == squarelist[selsquare]:
-                        pygame.draw.rect(screen, colors.SELECT, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
-                if x.piececolor == 1:
-                    pygame.draw.circle(screen, colors.BPIECE, (x.xcoordinate*100+50, x.ycoordinate*100+50), 40)
-                if x.piececolor == 2:
-                    pygame.draw.circle(screen, colors.WPIECE, (x.xcoordinate*100+50, x.ycoordinate*100+50), 40)
-                if x.type == 2:
-                    pygame.draw.circle(screen, colors.KING, (x.xcoordinate*100+50, x.ycoordinate*100+50), 30)
-        if winner == 1:
-            text = font.render("Black wins!", True, colors.WPIECE)
-        elif winner == 2:
-            text = font.render("White wins!", True, colors.WPIECE)
-        elif blackturn == True:
-            text = font.render("Black's turn!", True, colors.WPIECE)
-        else:
-            text = font.render("White's turn!", True, colors.WPIECE)
-        text_rect = text.get_rect(center=(1000,50))
-        screen.blit(text, text_rect)
 
 
 # Main
@@ -526,17 +421,18 @@ while running:
         else:
             postforceplay = postforce(lastmove,blackturn)
         winner = wincheck(blackturn)
-        render()
-        if IG_Menu.draw() == True:
+        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,winner,blackturn)
+        if IG_Menu.draw(screen) == True:
             gamestate = 0
     elif gamestate == 0:
-        render()
+        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,winner,blackturn)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        if MM_Play.draw() == True:
+        if MM_Play.draw(screen) == True:
+            blackturn, lastmove, postforceplay, force, moves, debugrender, winner = setgame()
             gamestate = 1
-        if MM_Quit.draw() == True:
+        if MM_Quit.draw(screen) == True:
             running = False
 
     pygame.display.flip()
