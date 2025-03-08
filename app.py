@@ -6,6 +6,7 @@ import datetime
 from square import *
 from button import *
 from render import *
+from random import randint
 
 logtext = open('log.txt', 'w')
 
@@ -113,6 +114,7 @@ selsquare = None
 is_selected = False
 oldss = None
 forcelist = []
+movelist = []
 
 # pygame setup
 pygame.init()
@@ -309,18 +311,11 @@ def click(selsquare: int, is_selected: bool, blackturn: bool, m: int, postforcep
             break
     if found == False:
         return None,False,blackturn,m,postforceplay,lastmove
-                    
 
-
-def menuclick():
-    mousex, mousey = pygame.mouse.get_pos()
-    if mousex > 400 and mousex < 800 and mousey > 300 and mousey < 400:
-        return "SC_0"
-    elif mousex > 400 and mousex < 800 and mousey > 500 and mousey < 600:
-        return "QUIT"
 
 
 def keycheck(event):
+    """Checks for key presses."""
     if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_ESCAPE:
             return "ESC"
@@ -331,11 +326,13 @@ def keycheck(event):
     
 
 
-def wincheck(blackturn):
-    validmoves = 0
-    if force == True:
-        return None
-    elif blackturn == True:
+def findmoves(blackturn: bool):
+    """Finds all of active player's legal moves."""
+    global movelist
+    movelist.clear()
+    if len(forcelist)!=0:
+        addlegalmove_forced()
+    elif blackturn:
         for a in range(len(squarelist)):
             if squarelist[a].piececolor == 1:
                 for b in range(len(squarelist)):
@@ -343,20 +340,16 @@ def wincheck(blackturn):
                         if abs(squarelist[a].xcoordinate-squarelist[b].xcoordinate) == 1:
                             if squarelist[a].type == 2:
                                 if abs(squarelist[a].ycoordinate-squarelist[b].ycoordinate) == 1:
-                                    validmoves += 1
+                                    addlegalmove(a,b)
                                 else: continue
                             else:
                                 if squarelist[a].ycoordinate-squarelist[b].ycoordinate == 1:
-                                    validmoves +=1
+                                    addlegalmove(a,b)
                                 else: continue
                         else: continue
                     else: continue
             else: continue
-        if validmoves == 0:
-            return 2
-        else:
-            return None
-    elif blackturn == False:
+    else:
         for a in range(len(squarelist)):
             if squarelist[a].piececolor == 2:
                 for b in range(len(squarelist)):
@@ -364,24 +357,42 @@ def wincheck(blackturn):
                         if abs(squarelist[a].xcoordinate-squarelist[b].xcoordinate) == 1:
                             if squarelist[a].type == 2:
                                 if abs(squarelist[a].ycoordinate-squarelist[b].ycoordinate) == 1:
-                                    validmoves += 1
+                                    addlegalmove(a,b)
                                 else: continue
                             else:
                                 if squarelist[b].ycoordinate-squarelist[a].ycoordinate == 1:
-                                    validmoves += 1
+                                    addlegalmove(a,b)
                                 else: continue
                         else: continue
                     else: continue
-            else: continue
-        if validmoves == 0:
-            return 1
-        else:
-            return None
+            else: continue                   
+
+
+def addlegalmove(a: int, b: int):
+    movelist.append(a)
+    movelist.append(b)
+    
+
+
+def addlegalmove_forced():
+    for x in range(int(len(forcelist)/3)):
+        movelist.append(forcelist[x*3])
+        movelist.append(forcelist[x*3+2])
+
+
+
+def wincheck(blackturn):
+    """Checks for win condition. (If the active player doesn't have any possible legal moves, their opponent wins)"""
+    if len(movelist)==0:
+        if blackturn: return 2
+        else: return 1
+    else: return None
 
 
 
 
 def debuglog(oldss):
+    """Logs the current state of the board."""
     if selsquare != oldss:
         oldss = selsquare
         logtext.write("\n")
@@ -394,8 +405,6 @@ def debuglog(oldss):
         else:
             logtext.write("No selection")
     return oldss
-
-# Render screen
 
 
 
@@ -420,12 +429,13 @@ while running:
             force = forcecheck(blackturn)
         else:
             postforceplay = postforce(lastmove,blackturn)
+        findmoves(blackturn)
         winner = wincheck(blackturn)
-        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,winner,blackturn)
+        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn)
         if IG_Menu.draw(screen) == True:
             gamestate = 0
     elif gamestate == 0:
-        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,winner,blackturn)
+        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
