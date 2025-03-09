@@ -15,7 +15,7 @@ logtext = open('log.txt', 'w')
 FPS = 60
 pygame.display.set_caption("Checkers")
 blackturn = True
-lastmove = None
+lastmove = []
 postforceplay = False
 force = False
 moves = 0
@@ -74,6 +74,8 @@ h8 = Square(7,0,2,1,0)
 
 def setgame():
     """Resets game to its move 0 state"""
+    global selsquare
+    selsquare = None
     squarelist[0] = Square(0,7,1,1,0)
     squarelist[1] = Square(2,7,1,1,0)
     squarelist[2] = Square(4,7,1,1,0)
@@ -106,13 +108,13 @@ def setgame():
     squarelist[29] = Square(3,0,2,1,0)
     squarelist[30] = Square(5,0,2,1,0)
     squarelist[31] = Square(7,0,2,1,0)
-    return True, None, False, False, 0, False, None
+    return True, [], False, False, 0, False, None
 
 squarelist = [a1,a3,a5,a7,b2,b4,b6,b8,c1,c3,c5,c7,d2,d4,d6,d8,e1,e3,e5,e7,f2,f4,f6,f8,g1,g3,g5,g7,h2,h4,h6,h8]
 
 selsquare = None
 is_selected = False
-oldss = None
+oldmoves = 0
 forcelist = []
 movelist = []
 
@@ -156,6 +158,8 @@ def forcecheck(blackturn: bool) -> bool:
     else:
         return False
 
+
+
 def force_findb(blackturn: bool, force_found: bool, clr: int, a: int) -> bool:
     """Searches for all squares (index b in squarelist) with pieces of the opposite colour to square with index a in squarelist. Once found, compares coordinates of both squares to see if piece on square b is in position to potentially be jumped by piece on square A, then calls function "force_findc(a, b, force_found)."
     """
@@ -174,6 +178,8 @@ def force_findb(blackturn: bool, force_found: bool, clr: int, a: int) -> bool:
                             force_found = force_findc(a, b, force_found)
     return force_found
 
+
+
 def force_findc(a: int, b: int, force_found: bool) -> bool:
     """Searches for square (index c in squarelist) which piece on square A will jump if it jumps over square B. If this square exists and is unoccupied, calls function "addforcedmove(a, b, c)."""
     for c in range(len(squarelist)):
@@ -187,6 +193,7 @@ def force_findc(a: int, b: int, force_found: bool) -> bool:
             force_found = addforcedmove(a, b, c)
     return force_found
             
+
 
 def addforcedmove(a: int, b: int, c: int) -> bool:
     """
@@ -209,16 +216,18 @@ def postforce(a: int, blackturn: bool) -> bool:
         clr = 2
     force_found = force_findb(blackturn, force_found, clr, a)
     if force_found == True:
+        findmoves(blackturn)
         return True
     else:
         return False
             
 
 
-def availabilitycheck(selsquare: int, is_selected: bool, blackturn: bool):
+def availabilitycheck(selsquare: int, blackturn: bool):
     """Checks for possible moves of selected piece"""
+    clearavailability()
     for a in range(len(squarelist)):
-        if is_selected == False:
+        if selsquare == None:
             squarelist[a].available = 0
         elif squarelist[a].type != 0:
             continue
@@ -257,60 +266,84 @@ def kingcheck():
 
 
 
-def click(selsquare: int, is_selected: bool, blackturn: bool, m: int, postforceplay: bool, lastmove: int):
-    """Detects which square the user clicks on."""
-    print(f"blackturn = {blackturn}")
-    if blackturn == True:
-        clr = 1
-    else:
-        clr = 2
-    found = False
-    print("click")
-    print(f"selsquare {selsquare}")
-    print(f"is selected {is_selected}")
+def click():
+    """Detects which square the player has clicked on."""
+    global selsquare
+    valid = False
     mousex, mousey = pygame.mouse.get_pos()
     fieldx, fieldy = floor(mousex/100),floor(mousey/100)
     for a in range(len(squarelist)):
         if squarelist[a].xcoordinate == fieldx and squarelist[a].ycoordinate == fieldy:
-            found = True
-            if is_selected == False:
-                if squarelist[a].piececolor == clr:
-                    return a,True,blackturn,m,postforceplay,lastmove
-                else:
-                    return None,False,blackturn,m,postforceplay,lastmove
-            elif is_selected == True:
-                if force or postforceplay:
-                    print(len(forcelist)/3)
-                    for f in range(int(len(forcelist)/3)):
-                        if forcelist[f*3] == selsquare and forcelist[f*3+2] == a:
-                            squarelist[a].piececolor,squarelist[a].type,squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type = squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type,squarelist[a].piececolor,squarelist[a].type
-                            squarelist[forcelist[f*3+1]].type,squarelist[forcelist[f*3+1]].piececolor = 0,0
-                            m += 1
-                            kingcheck()
-                            for x in range(len(squarelist)):
-                                squarelist[x].available = 0
-                            if postforce(a,blackturn) == True:
-                                return None,False,blackturn,m,True,a
-                            else:
-                                return None,False,not blackturn,m,False,lastmove
-                        else:
-                            continue
-                    return None,False,blackturn,m,postforceplay,lastmove
-                elif squarelist[a].available == 1:
-                    squarelist[a].piececolor,squarelist[a].type,squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type = squarelist[int(selsquare)].piececolor,squarelist[int(selsquare)].type,squarelist[a].piececolor,squarelist[a].type
-                    m += 1
-                    kingcheck()
-                    return None,False,not blackturn,m,postforceplay,lastmove
-                else:
-                    if squarelist[a].piececolor == clr:
-                        for f in range(len(squarelist)):
-                            squarelist[f].available = 0
-                        return a,True,blackturn,m,postforceplay,lastmove
-                    else:
-                        return None,False,blackturn,m,postforceplay,lastmove
-            break
-    if found == False:
-        return None,False,blackturn,m,postforceplay,lastmove
+            select(a)
+            valid = True
+    if valid == False:
+        selsquare = None
+
+
+
+
+def select(a):
+    """Selects the square which has been clicked on by the user if it contains a piece with a legal movement opportunity."""
+    global selsquare
+    global lastmove
+    valid = False
+    if selsquare == None:
+        lastmove.clear()
+        for x in range(int(len(movelist)/2)):
+            if a == movelist[x*2]:
+                selsquare = a
+                valid = True
+                break
+    else:
+        for x in range(int(len(movelist)/2)):
+            if selsquare == movelist[x*2] and a == movelist[x*2+1]:
+                move(selsquare,a)
+                selsquare = None
+                valid = True
+                break
+            elif a == movelist[x*2]:
+                selsquare = a
+                valid = True
+                break
+        if valid == False:
+            selsquare = None
+
+       
+    
+def move(a,b):
+    """Executes a legal move."""
+    global moves
+    global blackturn
+    global lastmove
+    if force:
+        for x in range(int(len(forcelist)/3)):
+            print(forcelist)
+            if a == forcelist[x*3] and b == forcelist[x*3+2]:
+                squarelist[forcelist[x*3+1]].type, squarelist[forcelist[x*3+1]].piececolor = 0,0
+                squarelist[a].piececolor,squarelist[a].type,squarelist[b].piececolor,squarelist[b].type = squarelist[b].piececolor,squarelist[b].type,squarelist[a].piececolor,squarelist[a].type
+                moves += 1
+                kingcheck()
+                lastmove = [a,b]
+                #clearavailability()
+                if postforce(b,blackturn) == False:
+                    blackturn = not blackturn
+                break
+    else:
+        for x in range(int(len(movelist)/2)):
+            if a == movelist[x*2] and b == movelist[x*2+1]:
+                squarelist[a].piececolor,squarelist[a].type,squarelist[b].piececolor,squarelist[b].type = squarelist[b].piececolor,squarelist[b].type,squarelist[a].piececolor,squarelist[a].type
+                moves += 1
+                lastmove = [a,b]
+                blackturn = not blackturn
+                break
+                #clearavailability()
+
+
+
+def clearavailability():
+    """Clears the availability value of all squares on the board."""
+    for x in range(len(squarelist)):
+        squarelist[x].available = 0
 
 
 
@@ -368,13 +401,16 @@ def findmoves(blackturn: bool):
             else: continue                   
 
 
+
 def addlegalmove(a: int, b: int):
+    """Adds a move to the list of legal moves."""
     movelist.append(a)
     movelist.append(b)
     
 
 
 def addlegalmove_forced():
+    """Copies list of forced moves into the list of legal moves."""
     for x in range(int(len(forcelist)/3)):
         movelist.append(forcelist[x*3])
         movelist.append(forcelist[x*3+2])
@@ -390,21 +426,27 @@ def wincheck(blackturn):
 
 
 
+def cpumove():
+    """Makes a random move"""
+    choice = randint(0, len(movelist)/2-1)
+    move(movelist[choice*2],movelist[choice*2+1])
 
-def debuglog(oldss):
+
+
+def debuglog(oldmoves):
     """Logs the current state of the board."""
-    if selsquare != oldss:
-        oldss = selsquare
+    if moves != oldmoves:
+        oldmoves = moves
         logtext.write("\n")
         logtext.write(f"Moves completed: {moves}\n")
         squarenames = ["a1","a3","a5","a7","b2","b4","b6","b8","c1","c3","c5","c7","d2","d4","d6","d8","e1","e3","e5","e7","f2","f4","f6","f8","g1","g3","g5","g7","h2","h4","h6","h8"]
         for a in range(len(squarelist)):
             logtext.write(f"{squarenames[a]}: Piececolor {squarelist[a].piececolor} | Type {squarelist[a].type} | Available {squarelist[a].available}\n")
-        if is_selected:
+        if selsquare != None:
             logtext.write(f"selsquare: {squarenames[selsquare]}\n")
         else:
             logtext.write("No selection")
-    return oldss
+    return oldmoves
 
 
 
@@ -420,22 +462,27 @@ while running:
             elif keycheck(event) == "Debug":
                 debugrender = not debugrender
             if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
-                if winner == None:
-                    selsquare,is_selected,blackturn,moves,postforceplay,lastmove = click(selsquare,is_selected,blackturn,moves,postforceplay,lastmove)
-                    if force == False:
-                        availabilitycheck(selsquare, is_selected, blackturn)
-            oldss = debuglog(oldss)
+                if running and winner == None:
+                    cpumove()
+                else:
+                    click()
+                if force == False:
+                        availabilitycheck(selsquare, blackturn)
+                else:
+                    clearavailability()
+            oldmoves = debuglog(oldmoves)
+        kingcheck()
         if postforceplay == False:
             force = forcecheck(blackturn)
         else:
             postforceplay = postforce(lastmove,blackturn)
         findmoves(blackturn)
         winner = wincheck(blackturn)
-        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn)
+        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove)
         if IG_Menu.draw(screen) == True:
             gamestate = 0
     elif gamestate == 0:
-        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn)
+        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False

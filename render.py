@@ -2,7 +2,7 @@ import pygame
 import colors
 import assets
 
-def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn):
+def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove):
     screen.fill("black")
     if gamestate == 0:
         screen.blit(assets.Menu_BG, (assets.Menu_BG.get_rect().x, assets.Menu_BG.get_rect().y))
@@ -43,6 +43,9 @@ def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,move
         else:
             for a in range(len(squarelist)):
                 x = squarelist[a]
+                if len(lastmove) != 0:
+                    if a == lastmove[0] or a == lastmove[1]:
+                        pygame.draw.rect(screen, colors.LASTMOVE, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
                 if x.available == 2:
                     pygame.draw.rect(screen, colors.FORCED, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
                 if selsquare != None:
@@ -58,7 +61,7 @@ def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,move
                     pygame.draw.circle(screen, colors.KING, (x.xcoordinate*100+50, x.ycoordinate*100+50), 30)
                 for move in range(int(len(movelist)/2)):
                     if a == movelist[move*2]:
-                        pygame.draw.rect(screen, colors.WPIECE, (x.xcoordinate*100, x.ycoordinate*100, 100, 100), 2)
+                        pygame.draw.rect(screen, colors.SELECT, (x.xcoordinate*100, x.ycoordinate*100, 100, 100), 5)
         if winner == 1:
             text = font.render("Black wins!", True, colors.WPIECE)
         elif winner == 2:
