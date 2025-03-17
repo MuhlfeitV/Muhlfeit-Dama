@@ -21,10 +21,13 @@ force = False
 moves = 0
 debugrender = False
 winner = None
+gamemode = 0
+menuclick = 0
 
 # Game States
 
 gamestate = 0
+gamescreen = 0
 pendingstate = None # For the yes/no box
 
 # 0 Main Menu
@@ -34,8 +37,13 @@ pendingstate = None # For the yes/no box
 # Buttons
 
 MM_Play = Button(assets.Play, assets.Play_H, 500, 300)
-MM_Quit = Button(assets.Quit, assets.Quit_H, 500, 500)
-IG_Menu = Button(assets.Quit, assets.Quit_H, 900, 600)
+MM_Settings = Button(assets.Settings, assets.Settings_H, 500, 450)
+MM_Quit = Button(assets.Quit, assets.Quit_H, 500, 600)
+IG_Quit = Button(assets.Quit, assets.Quit_H, 900, 600)
+SET_PvP = Button(assets.PvP, assets.PvP_H, 500, 300)
+SET_PvC = Button(assets.PvC, assets.PvC_H, 500, 300)
+SET_CvC = Button(assets.CvC, assets.CvC_H, 500, 300)
+SET_Back = Button(assets.Back, assets.Back_H, 500, 600)
 
 # Usable squares
 
@@ -201,7 +209,6 @@ def addforcedmove(a: int, b: int, c: int) -> bool:
     forcelist.append(a)
     forcelist.append(b)
     forcelist.append(c)
-    squarelist[c].available = 2
     return True
 
 
@@ -223,35 +230,16 @@ def postforce(a: int, blackturn: bool) -> bool:
             
 
 
-def availabilitycheck(selsquare: int, blackturn: bool):
+def availabilitycheck(selsquare: int):
     """Checks for possible moves of selected piece"""
     clearavailability()
-    for a in range(len(squarelist)):
-        if selsquare == None:
-            squarelist[a].available = 0
-        elif squarelist[a].type != 0:
-            continue
-        else:
-            if blackturn:
-                if abs(squarelist[a].xcoordinate-squarelist[selsquare].xcoordinate) == 1:
-                    if squarelist[selsquare].type == 2:
-                        if abs(squarelist[a].ycoordinate-squarelist[selsquare].ycoordinate) == 1:
-                            squarelist[a].available = 1
-                            continue
-                    else:
-                        if (squarelist[a].ycoordinate-squarelist[selsquare].ycoordinate) == -1:
-                            squarelist[a].available = 1
-                            continue
-            else:
-                if abs(squarelist[a].xcoordinate-squarelist[selsquare].xcoordinate) == 1:
-                    if squarelist[selsquare].type == 2:
-                        if abs(squarelist[a].ycoordinate-squarelist[selsquare].ycoordinate) == 1:
-                            squarelist[a].available = 1
-                            continue
-                    else:
-                        if (squarelist[a].ycoordinate-squarelist[selsquare].ycoordinate) == 1:
-                            squarelist[a].available = 1
-                            continue
+    if len(forcelist) == 0:
+        for x in range(int(len(movelist)/2)):
+            if movelist[x*2] == selsquare:
+                squarelist[movelist[x*2+1]].available = 1
+    else:
+        for x in range(int(len(movelist)/2)):
+            squarelist[movelist[x*2+1]].available = 2
 
 
 
@@ -315,6 +303,7 @@ def move(a,b):
     global moves
     global blackturn
     global lastmove
+    global postforceplay
     if force:
         for x in range(int(len(forcelist)/3)):
             print(forcelist)
@@ -327,6 +316,9 @@ def move(a,b):
                 #clearavailability()
                 if postforce(b,blackturn) == False:
                     blackturn = not blackturn
+                    postforceplay = False
+                else:
+                    postforceplay = True
                 break
     else:
         for x in range(int(len(movelist)/2)):
@@ -461,36 +453,60 @@ while running:
                 running = False
             elif keycheck(event) == "Debug":
                 debugrender = not debugrender
-            if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
-                if running and winner == None:
+            if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0] and winner == None:
+                if gamemode == 1 and not blackturn:
+                    cpumove()
+                elif gamemode == 2:
                     cpumove()
                 else:
                     click()
-                if force == False:
-                        availabilitycheck(selsquare, blackturn)
-                else:
-                    clearavailability()
             oldmoves = debuglog(oldmoves)
         kingcheck()
         if postforceplay == False:
             force = forcecheck(blackturn)
-        else:
-            postforceplay = postforce(lastmove,blackturn)
         findmoves(blackturn)
+        availabilitycheck(selsquare)
         winner = wincheck(blackturn)
         render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove)
-        if IG_Menu.draw(screen) == True:
+        if IG_Quit.draw(screen) == True:
             gamestate = 0
+            gamescreen = 0
     elif gamestate == 0:
         render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        if MM_Play.draw(screen) == True:
-            blackturn, lastmove, postforceplay, force, moves, debugrender, winner = setgame()
-            gamestate = 1
-        if MM_Quit.draw(screen) == True:
-            running = False
+            if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
+                menuclick = 1
+            else:
+                menuclick = 0
+        if gamescreen == 0:
+            if MM_Play.draw(screen) == True and menuclick:
+                blackturn, lastmove, postforceplay, force, moves, debugrender, winner = setgame()
+                gamestate = 1
+                gamescreen = 0
+            if MM_Settings.draw(screen) == True and menuclick:
+                gamescreen = 1
+            if MM_Quit.draw(screen) == True and menuclick:
+                running = False
+        elif gamescreen == 1:
+            if gamemode == 0:
+                if SET_PvP.draw(screen) == True and menuclick:
+                    gamemode = 1
+                    menuclick = 0
+            elif gamemode == 1:
+                if SET_PvC.draw(screen) == True and menuclick:
+                    gamemode = 2
+                    menuclick = 0
+            elif gamemode == 2:
+                if SET_CvC.draw(screen) == True and menuclick:
+                    gamemode = 0
+                    menuclick = 0
+            if SET_Back.draw(screen) == True and menuclick:
+                gamescreen = 0
+                menuclick = 0
+            print(gamemode)
+
 
     pygame.display.flip()
     
