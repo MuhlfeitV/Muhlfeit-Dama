@@ -2,7 +2,28 @@ import pygame
 import colors
 import assets
 
-def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove):
+def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove,gamecolor):
+    if gamecolor == 0:
+        colors.Dspace = colors.DSPACE_0
+        colors.Lspace = colors.LSPACE_0
+        colors.Bpiece = colors.BPIECE_0
+        colors.Select = colors.SELECT_0
+        colors.Cansel = colors.CANSEL_0
+        colors.Forced = colors.FORCED_0
+    elif gamecolor == 1:
+        colors.Dspace = colors.DSPACE_1
+        colors.Lspace = colors.LSPACE_1
+        colors.Bpiece = colors.BPIECE_1
+        colors.Select = colors.SELECT_1
+        colors.Cansel = colors.CANSEL_1
+        colors.Forced = colors.FORCED_1
+    elif gamecolor == 2:
+        colors.Dspace = colors.DSPACE_2
+        colors.Lspace = colors.LSPACE_2
+        colors.Bpiece = colors.BPIECE_2
+        colors.Select = colors.SELECT_2
+        colors.Cansel = colors.CANSEL_2
+        colors.Forced = colors.FORCED_2
     screen.fill("black")
     if gamestate == 0:
         screen.blit(assets.Menu_BG, (assets.Menu_BG.get_rect().x, assets.Menu_BG.get_rect().y))
@@ -15,11 +36,11 @@ def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,move
                     if (row + column) % 2 != 0:
                         pygame.draw.rect(screen, colors.DSPACEWIN, (row*100, column*100, 100, 100))    
         else:
-            pygame.draw.rect(screen, colors.LSPACE, (0, 0, 800, 800))
+            pygame.draw.rect(screen, colors.Lspace, (0, 0, 800, 800))
             for row in range(0,8):
                 for column in range(0,8):
                     if (row + column) % 2 != 0:
-                        pygame.draw.rect(screen, colors.DSPACE, (row*100, column*100, 100, 100))
+                        pygame.draw.rect(screen, colors.Dspace, (row*100, column*100, 100, 100))
         if debugrender:
             propss = font.render(f"selsquare = {str(selsquare)}", True, colors.WPIECE)
             propfl = font.render(f"forcelist = {str(forcelist)}", True, colors.WPIECE)
@@ -47,21 +68,21 @@ def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,move
                     if a == lastmove[0] or a == lastmove[1]:
                         pygame.draw.rect(screen, colors.LASTMOVE, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
                 if x.available == 2:
-                    pygame.draw.rect(screen, colors.FORCED, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
+                    pygame.draw.rect(screen, colors.Forced, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
                 if selsquare != None:
                     if x.available == 1:
-                        pygame.draw.rect(screen, colors.CANSEL, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
+                        pygame.draw.rect(screen, colors.Cansel, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
                     if x == squarelist[selsquare]:
-                        pygame.draw.rect(screen, colors.SELECT, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
+                        pygame.draw.rect(screen, colors.Select, (x.xcoordinate*100, x.ycoordinate*100, 100, 100))
                 if x.piececolor == 1:
-                    pygame.draw.circle(screen, colors.BPIECE, (x.xcoordinate*100+50, x.ycoordinate*100+50), 40)
+                    pygame.draw.circle(screen, colors.Bpiece, (x.xcoordinate*100+50, x.ycoordinate*100+50), 40)
                 if x.piececolor == 2:
                     pygame.draw.circle(screen, colors.WPIECE, (x.xcoordinate*100+50, x.ycoordinate*100+50), 40)
                 if x.type == 2:
                     pygame.draw.circle(screen, colors.KING, (x.xcoordinate*100+50, x.ycoordinate*100+50), 30)
                 for move in range(int(len(movelist)/2)):
                     if a == movelist[move*2]:
-                        pygame.draw.rect(screen, colors.SELECT, (x.xcoordinate*100, x.ycoordinate*100, 100, 100), 5)
+                        pygame.draw.rect(screen, colors.Select, (x.xcoordinate*100, x.ycoordinate*100, 100, 100), 5)
         if winner == 1:
             text = font.render("Black wins!", True, colors.WPIECE)
         elif winner == 2:

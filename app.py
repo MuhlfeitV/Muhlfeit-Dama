@@ -22,7 +22,8 @@ moves = 0
 debugrender = False
 winner = None
 gamemode = 0
-menuclick = 0
+gamecolor = 0
+menuclick = False
 
 # Game States
 
@@ -44,6 +45,12 @@ SET_PvP = Button(assets.PvP, assets.PvP_H, 500, 300)
 SET_PvC = Button(assets.PvC, assets.PvC_H, 500, 300)
 SET_CvC = Button(assets.CvC, assets.CvC_H, 500, 300)
 SET_Back = Button(assets.Back, assets.Back_H, 500, 600)
+SET_Col0 = Button(assets.Clr0, assets.Clr0, 400, 450)
+SET_Col0_Sel = Button(assets.Clr0_sel, assets.Clr0_sel, 400, 450)
+SET_Col1 = Button(assets.Clr1, assets.Clr1, 550, 450)
+SET_Col1_Sel = Button(assets.Clr1_sel, assets.Clr1_sel, 550, 450)
+SET_Col2 = Button(assets.Clr2, assets.Clr2, 700, 450)
+SET_Col2_Sel = Button(assets.Clr2_sel, assets.Clr2_sel, 700, 450)
 
 # Usable squares
 
@@ -467,47 +474,76 @@ while running:
         findmoves(blackturn)
         availabilitycheck(selsquare)
         winner = wincheck(blackturn)
-        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove)
+        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove,gamecolor)
         if IG_Quit.draw(screen) == True:
             gamestate = 0
             gamescreen = 0
     elif gamestate == 0:
-        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove)
+        render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,movelist,winner,blackturn,lastmove,gamecolor)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.MOUSEBUTTONDOWN and pygame.mouse.get_pressed()[0]:
-                menuclick = 1
+                menuclick = True
             else:
-                menuclick = 0
+                menuclick = False
         if gamescreen == 0:
             if MM_Play.draw(screen) == True and menuclick:
                 blackturn, lastmove, postforceplay, force, moves, debugrender, winner = setgame()
                 gamestate = 1
                 gamescreen = 0
             if MM_Settings.draw(screen) == True and menuclick:
+                menuclick = False
                 gamescreen = 1
             if MM_Quit.draw(screen) == True and menuclick:
+                menuclick = False
                 running = False
         elif gamescreen == 1:
             if gamemode == 0:
                 if SET_PvP.draw(screen) == True and menuclick:
                     gamemode = 1
-                    menuclick = 0
+                    menuclick = False
             elif gamemode == 1:
                 if SET_PvC.draw(screen) == True and menuclick:
                     gamemode = 2
-                    menuclick = 0
+                    menuclick = False
             elif gamemode == 2:
                 if SET_CvC.draw(screen) == True and menuclick:
                     gamemode = 0
-                    menuclick = 0
+                    menuclick = False
+            if gamecolor == 0:
+                if SET_Col0_Sel.draw(screen) == True and menuclick:
+                    gamecolor = 0
+                    menuclick = False
+                elif SET_Col1.draw(screen) == True and menuclick:
+                    gamecolor = 1
+                    menuclick = False
+                elif SET_Col2.draw(screen) == True and menuclick:
+                    gamecolor = 2
+                    menuclick = False
+            elif gamecolor == 1:
+                if SET_Col0.draw(screen) == True and menuclick:
+                    gamecolor = 0
+                    menuclick = False
+                elif SET_Col1_Sel.draw(screen) == True and menuclick:
+                    gamecolor = 1
+                    menuclick = False
+                elif SET_Col2.draw(screen) == True and menuclick:
+                    gamecolor = 2
+                    menuclick = False
+            elif gamecolor == 2:
+                if SET_Col0.draw(screen) == True and menuclick:
+                    gamecolor = 0
+                    menuclick = False
+                elif SET_Col1.draw(screen) == True and menuclick:
+                    gamecolor = 1
+                    menuclick = False
+                elif SET_Col2_Sel.draw(screen) == True and menuclick:
+                    gamecolor = 2
+                    menuclick = False
             if SET_Back.draw(screen) == True and menuclick:
                 gamescreen = 0
-                menuclick = 0
-            print(gamemode)
-
-
+                menuclick = False
     pygame.display.flip()
     
     clock.tick(FPS)
