@@ -232,7 +232,8 @@ def postforce(a: int, blackturn: bool) -> bool:
         clr = 2
     force_found = force_findb(blackturn, force_found, clr, a)
     if force_found == True:
-        selsquare = a
+        if gamemode == 0 or (gamemode == 1 and blackturn):
+            selsquare = a
         findmoves(blackturn)
         return True
     else:
