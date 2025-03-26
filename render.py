@@ -29,6 +29,7 @@ def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,move
         screen.blit(assets.Menu_BG, (assets.Menu_BG.get_rect().x, assets.Menu_BG.get_rect().y))
         screen.blit(assets.Title, (400,100))
     elif gamestate == 1:
+        screen.blit(assets.Blackturn, (800,0))
         if winner != None:
             pygame.draw.rect(screen, colors.LSPACEWIN, (0, 0, 800, 800))
             for row in range(0,8):
@@ -84,12 +85,15 @@ def render(screen,gamestate,debugrender,font,squarelist,selsquare,forcelist,move
                     if a == movelist[move*2]:
                         pygame.draw.rect(screen, colors.Select, (x.xcoordinate*100, x.ycoordinate*100, 100, 100), 5)
         if winner == 1:
+            screen.blit(assets.Blackwin, (800,0))
             text = font.render("Black wins!", True, colors.WPIECE)
         elif winner == 2:
+            screen.blit(assets.Whitewin, (800,0))
             text = font.render("White wins!", True, colors.WPIECE)
         elif blackturn == True:
             text = font.render("Black's turn!", True, colors.WPIECE)
         else:
+            screen.blit(assets.Whiteturn, (800,0))
             text = font.render("White's turn!", True, colors.WPIECE)
         text_rect = text.get_rect(center=(1000,50))
         screen.blit(text, text_rect)

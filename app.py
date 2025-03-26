@@ -13,7 +13,8 @@ logtext = open('log.txt', 'w')
 # Settings
 
 FPS = 60
-pygame.display.set_caption("Checkers")
+pygame.display.set_caption("CheckersVM")
+pygame.display.set_icon(assets.Icon)
 blackturn = True
 lastmove = []
 postforceplay = False
@@ -40,7 +41,7 @@ pendingstate = None # For the yes/no box
 MM_Play = Button(assets.Play, assets.Play_H, 500, 300)
 MM_Settings = Button(assets.Settings, assets.Settings_H, 500, 450)
 MM_Quit = Button(assets.Quit, assets.Quit_H, 500, 600)
-IG_Quit = Button(assets.Quit, assets.Quit_H, 900, 600)
+IG_Quit = Button(assets.Quit, assets.Quit_H, 900, 650)
 SET_PvP = Button(assets.PvP, assets.PvP_H, 500, 300)
 SET_PvC = Button(assets.PvC, assets.PvC_H, 500, 300)
 SET_CvC = Button(assets.CvC, assets.CvC_H, 500, 300)
@@ -222,6 +223,7 @@ def addforcedmove(a: int, b: int, c: int) -> bool:
 
 def postforce(a: int, blackturn: bool) -> bool:
     """Check for continuations of a chain of forced moves which the player whose turn it is must choose from. Only checks for piece which has just been moved by the player. Looks for squares with pieces of the opposite colour (index b in squarelist) using function "force_findb(blackturn, force_found, clr, a)."""
+    global selsquare
     forcelist.clear()
     force_found = 0
     if blackturn:
@@ -230,6 +232,7 @@ def postforce(a: int, blackturn: bool) -> bool:
         clr = 2
     force_found = force_findb(blackturn, force_found, clr, a)
     if force_found == True:
+        selsquare = a
         findmoves(blackturn)
         return True
     else:
@@ -272,7 +275,8 @@ def click():
             select(a)
             valid = True
     if valid == False:
-        selsquare = None
+        if not postforceplay:
+            selsquare = None
 
 
 
@@ -293,7 +297,8 @@ def select(a):
         for x in range(int(len(movelist)/2)):
             if selsquare == movelist[x*2] and a == movelist[x*2+1]:
                 move(selsquare,a)
-                selsquare = None
+                if not postforceplay:
+                    selsquare = None
                 valid = True
                 break
             elif a == movelist[x*2]:
@@ -301,7 +306,8 @@ def select(a):
                 valid = True
                 break
         if valid == False:
-            selsquare = None
+            if not postforceplay:
+                selsquare = None
 
        
     
@@ -313,14 +319,12 @@ def move(a,b):
     global postforceplay
     if force:
         for x in range(int(len(forcelist)/3)):
-            print(forcelist)
             if a == forcelist[x*3] and b == forcelist[x*3+2]:
                 squarelist[forcelist[x*3+1]].type, squarelist[forcelist[x*3+1]].piececolor = 0,0
                 squarelist[a].piececolor,squarelist[a].type,squarelist[b].piececolor,squarelist[b].type = squarelist[b].piececolor,squarelist[b].type,squarelist[a].piececolor,squarelist[a].type
                 moves += 1
                 kingcheck()
                 lastmove = [a,b]
-                #clearavailability()
                 if postforce(b,blackturn) == False:
                     blackturn = not blackturn
                     postforceplay = False
@@ -335,7 +339,6 @@ def move(a,b):
                 lastmove = [a,b]
                 blackturn = not blackturn
                 break
-                #clearavailability()
 
 
 
